@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { User } from '../types';
-import { Mail, Facebook, Instagram, ShieldCheck, User as UserIcon, Hotel } from 'lucide-react';
+import { Mail, Facebook, Instagram, ShieldCheck, User as UserIcon, Hotel, AlertCircle, Loader2 } from 'lucide-react';
+import { api } from '../services/api';
 
 interface AuthProps {
   onLogin: (user: User) => void;
@@ -10,20 +12,35 @@ interface AuthProps {
 const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
   const [role, setRole] = useState<'ADMIN' | 'USER'>('ADMIN');
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleLogin = (provider: string) => {
+  const handleLogin = async (provider: string) => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      onLogin({
-        id: '123',
-        name: role === 'ADMIN' ? 'Rajesh Kumar' : 'Staff Member',
-        email: `user@${provider}.com`,
-        role: role,
-        hotelName: 'Hotel Mumbai Deluxe',
-        avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=4f46e5&color=fff'
-      });
-    }, 1000);
+    setError('');
+    
+    try {
+        if(provider === 'email') {
+            const user = await api.login(email, password);
+            onLogin(user);
+        } else {
+            // Mock social login for now
+             setTimeout(() => {
+                onLogin({
+                  id: '123',
+                  name: role === 'ADMIN' ? 'Rajesh Kumar' : 'Staff Member',
+                  email: `user@${provider}.com`,
+                  role: role,
+                  hotelName: 'Hotel Mumbai Deluxe',
+                  avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=4f46e5&color=fff'
+                });
+            }, 1000);
+        }
+    } catch (err) {
+        setError('Invalid credentials or server error.');
+        setLoading(false);
+    }
   };
 
   return (
@@ -56,49 +73,67 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
               </button>
            </div>
 
-          <button 
-            onClick={() => handleLogin('gmail')}
-            disabled={loading}
-            className="w-full flex items-center justify-center px-4 py-3 border border-slate-300 rounded-xl shadow-sm text-slate-700 bg-white hover:bg-slate-50 font-medium transition-colors"
-          >
-            <Mail className="text-red-500 mr-3" size={20} />
-            Continue with Gmail
-          </button>
-          
-          <button 
-            onClick={() => handleLogin('facebook')}
-            disabled={loading}
-            className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-xl shadow-sm text-white bg-[#1877F2] hover:bg-[#166fe5] font-medium transition-colors"
-          >
-            <Facebook className="mr-3" size={20} />
-            Continue with Facebook
-          </button>
-          
-          <button 
-            onClick={() => handleLogin('instagram')}
-            disabled={loading}
-            className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-xl shadow-sm text-white bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] hover:opacity-90 font-medium transition-colors"
-          >
-            <Instagram className="mr-3" size={20} />
-            Continue with Instagram
-          </button>
+          {error && (
+            <div className="bg-rose-50 text-rose-600 text-sm p-3 rounded-lg flex items-center gap-2">
+                <AlertCircle size={16} /> {error}
+            </div>
+          )}
 
+          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleLogin('email'); }}>
+             <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email address" 
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+             />
+             <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password" 
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+             />
+             <button disabled={loading} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+                {loading ? <Loader2 className="animate-spin" size={20} /> : 'Sign In'}
+             </button>
+          </form>
+          
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500">Or sign in with email</span>
+              <span className="px-2 bg-white text-slate-500">Or continue with</span>
             </div>
           </div>
+
+          <button 
+            onClick={() => handleLogin('google')}
+            disabled={loading}
+            className="w-full flex items-center justify-center px-4 py-3 border border-slate-300 rounded-xl shadow-sm text-slate-700 bg-white hover:bg-slate-50 font-medium transition-colors"
+          >
+            <Mail className="text-red-500 mr-3" size={20} />
+            Google
+          </button>
           
-          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleLogin('email'); }}>
-             <input type="email" placeholder="Email address" className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-             <input type="password" placeholder="Password" className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-             <button disabled={loading} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors">
-                {loading ? 'Signing in...' : 'Sign In'}
-             </button>
-          </form>
+          <div className="grid grid-cols-2 gap-4">
+             <button 
+                onClick={() => handleLogin('facebook')}
+                disabled={loading}
+                className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-xl shadow-sm text-white bg-[#1877F2] hover:bg-[#166fe5] font-medium transition-colors"
+            >
+                <Facebook size={20} />
+            </button>
+            <button 
+                onClick={() => handleLogin('instagram')}
+                disabled={loading}
+                className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-xl shadow-sm text-white bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] hover:opacity-90 font-medium transition-colors"
+            >
+                <Instagram size={20} />
+            </button>
+          </div>
+
         </div>
         
         <div className="bg-slate-50 px-8 py-4 border-t border-slate-100 text-center">

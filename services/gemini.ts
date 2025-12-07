@@ -94,15 +94,21 @@ export const findLocalEvents = async (city: string, month: string): Promise<Even
     
     // Extract sources from grounding chunks
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const sources = chunks
+    
+    interface SourceItem {
+      title: string;
+      uri: string;
+    }
+
+    const sources: SourceItem[] = chunks
         .map((chunk: any) => ({
             title: chunk.web?.title || "Source",
             uri: chunk.web?.uri || ""
         }))
-        .filter((s: {uri: string}) => s.uri !== ""); // Filter out empty URIs
+        .filter((s: SourceItem) => s.uri !== "");
     
     // Remove duplicates based on URI
-    const uniqueSources = Array.from(new Map(sources.map((s: {uri: string}) => [s.uri, s])).values());
+    const uniqueSources = Array.from(new Map(sources.map((s) => [s.uri, s])).values());
 
     const events: EventData[] = [{
         title: `Market Report: ${city} (${month})`,

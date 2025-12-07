@@ -30,6 +30,7 @@ import Reports from './Reports';
 import AdminPanel from './AdminPanel';
 import RMSModule from './RMSModule';
 import BookingEngine from './BookingEngine';
+import { api } from '../services/api';
 
 const COMPETITOR_COLORS = ['#ec4899', '#f59e0b', '#06b6d4', '#8b5cf6', '#84cc16'];
 
@@ -65,60 +66,83 @@ const App: React.FC = () => {
   ]);
 
   // Competitor State
-  const [competitors, setCompetitors] = useState<Competitor[]>([
-      { id: 'c1', name: 'Grand Hotel Mumbai', color: COMPETITOR_COLORS[0] },
-      { id: 'c2', name: 'City Stay Inn', color: COMPETITOR_COLORS[1] },
-      { id: 'c3', name: 'Seaside Resort', color: COMPETITOR_COLORS[2] }
-  ]);
+  const [competitors, setCompetitors] = useState<Competitor[]>([]);
 
-  // Mock Data Generation for Indian Market (INR)
-  const generateMockData = (comps: Competitor[]): DailyData[] => {
-    const data: DailyData[] = [];
-    const today = new Date();
-    
-    for (let i = 0; i < 30; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
+  // Function to generate and seed data if DB is empty
+  const seedMockData = async (comps: Competitor[]) => {
+      const mockData: DailyData[] = [];
+      const today = new Date();
       
-      const dayOfWeek = date.getDay();
-      const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
-      const baseOcc = isWeekend ? 85 : 55;
-      const occupancy = Math.min(100, Math.max(20, baseOcc + Math.random() * 20 - 10));
-      
-      const basePrice = 4500;
-      const adr = Math.round(basePrice * (1 + (occupancy / 100)) + (Math.random() * 500));
-      
-      const compRates: Record<string, number> = {};
-      let totalCompRate = 0;
-      
-      comps.forEach(comp => {
-          const variance = (Math.random() * 0.3) - 0.15;
-          const rate = Math.round(adr * (1 + variance));
-          compRates[comp.id] = rate;
-          totalCompRate += rate;
-      });
+      for (let i = 0; i < 30; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
+        const baseOcc = isWeekend ? 85 : 55;
+        const occupancy = Math.min(100, Math.max(20, baseOcc + Math.random() * 20 - 10));
+        
+        const basePrice = 4500;
+        const adr = Math.round(basePrice * (1 + (occupancy / 100)) + (Math.random() * 500));
+        
+        const compRates: Record<string, number> = {};
+        let totalCompRate = 0;
+        
+        comps.forEach(comp => {
+            const variance = (Math.random() * 0.3) - 0.15;
+            const rate = Math.round(adr * (1 + variance));
+            compRates[comp.id] = rate;
+            totalCompRate += rate;
+        });
 
-      const avgCompRate = comps.length > 0 ? Math.round(totalCompRate / comps.length) : adr;
+        const avgCompRate = comps.length > 0 ? Math.round(totalCompRate / comps.length) : adr;
 
-      data.push({
-        date: dateStr,
-        occupancy: Math.round(occupancy),
-        adr,
-        revpar: Math.round(adr * (occupancy / 100)),
-        competitorRate: avgCompRate,
-        competitorRates: compRates,
-        bookings: Math.floor(Math.random() * 10) + 2
-      });
-    }
-    return data;
+        mockData.push({
+          date: dateStr,
+          occupancy: Math.round(occupancy),
+          adr,
+          revpar: Math.round(adr * (occupancy / 100)),
+          competitorRate: avgCompRate,
+          competitorRates: compRates,
+          bookings: Math.floor(Math.random() * 10) + 2
+        });
+      }
+      
+      await api.seedData(mockData);
+      return mockData;
   };
 
+  // Initial Data Fetch
   useEffect(() => {
-    const mockData = generateMockData(competitors);
-    setData(mockData);
-    updateMetrics(mockData);
-  }, [competitors.length]); // Regenerate if competitors change structure slightly for demo
+    const fetchData = async () => {
+        // 1. Fetch Competitors
+        let comps = await api.getCompetitors();
+        if (comps.length === 0) {
+            // Seed competitors if none exist
+            const defaults = [
+                { name: 'Grand Hotel Mumbai', color: COMPETITOR_COLORS[0] },
+                { name: 'City Stay Inn', color: COMPETITOR_COLORS[1] },
+                { name: 'Seaside Resort', color: COMPETITOR_COLORS[2] }
+            ];
+            for (const d of defaults) await api.addCompetitor(d);
+            comps = await api.getCompetitors();
+        }
+        setCompetitors(comps);
+
+        // 2. Fetch Daily Data
+        let daily = await api.getDailyData();
+        if (daily.length === 0) {
+            daily = await seedMockData(comps);
+        }
+        setData(daily);
+        updateMetrics(daily);
+    };
+
+    if (currentPage === 'APP') {
+        fetchData();
+    }
+  }, [currentPage]);
 
   const updateMetrics = (currentData: DailyData[]) => {
     const totalRev = currentData.reduce((sum, d) => sum + (d.revpar * 50), 0); 
@@ -144,26 +168,19 @@ const App: React.FC = () => {
   };
 
   // Competitor Handlers
-  const addCompetitor = (name: string) => {
-      const newId = `c${Date.now()}`;
+  const addCompetitor = async (name: string) => {
       const colorIndex = competitors.length % COMPETITOR_COLORS.length;
-      const newComp: Competitor = { id: newId, name, color: COMPETITOR_COLORS[colorIndex] };
-      const newComps = [...competitors, newComp];
-      setCompetitors(newComps);
-      // In a real app, we would fetch rates here. For demo, we regenerate mock data.
-      const updatedData = generateMockData(newComps);
-      setData(updatedData);
+      const newComp = await api.addCompetitor({ name, color: COMPETITOR_COLORS[colorIndex] });
+      setCompetitors([...competitors, newComp]);
   };
 
-  const removeCompetitor = (id: string) => {
-      const newComps = competitors.filter(c => c.id !== id);
-      setCompetitors(newComps);
-      // Clean up data for demo
-      const updatedData = generateMockData(newComps);
-      setData(updatedData);
+  const removeCompetitor = async (id: string) => {
+      await api.deleteCompetitor(id);
+      setCompetitors(competitors.filter(c => c.id !== id));
   };
 
   const updateCompetitorRate = (date: string, compId: string, newRate: number) => {
+      // For this MVP, we update local state. In real app, we'd persist this to DB as well.
       const updatedData = data.map(day => {
           if (day.date === date) {
               const newRates = { ...day.competitorRates, [compId]: newRate };
@@ -177,7 +194,9 @@ const App: React.FC = () => {
   };
 
   // Update Hotel Rate Handler
-  const updateMyRate = (date: string, newRate: number) => {
+  const updateMyRate = async (date: string, newRate: number) => {
+      await api.updateRate(date, newRate);
+      
       const updatedData = data.map(day => {
           if (day.date === date) {
               const revpar = Math.round(newRate * (day.occupancy / 100));

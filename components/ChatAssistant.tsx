@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
-import { chatWithJyotiPrem } from '../services/gemini';
+import { chatWithRevOp } from '../services/gemini';
 import ReactMarkdown from 'react-markdown';
 
 const ChatAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([
-    { role: 'model', text: 'Hi! I am JyotiPrem. Ask me about your RevPAR, upcoming high-demand dates, or marketing ideas.' }
+    { role: 'model', text: 'Hi! I am RevOp. Ask me about your RevPAR, upcoming high-demand dates, or marketing ideas.' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ const ChatAssistant: React.FC = () => {
             parts: [{ text: m.text }]
         }));
 
-        const response = await chatWithJyotiPrem(history, userMsg);
+        const response = await chatWithRevOp(history, userMsg);
         setMessages(prev => [...prev, { role: 'model', text: response }]);
     } catch (error) {
         setMessages(prev => [...prev, { role: 'model', text: "I'm having trouble connecting right now. Please check your API key." }]);
@@ -66,7 +66,7 @@ const ChatAssistant: React.FC = () => {
               <div className="bg-white/20 p-1.5 rounded-full">
                 <Bot size={18} />
               </div>
-              <span className="font-semibold">JyotiPrem Assistant</span>
+              <span className="font-semibold">RevOp Assistant</span>
             </div>
             <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded transition-colors">
               <X size={18} />

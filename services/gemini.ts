@@ -36,7 +36,7 @@ export const analyzePricing = async (
   };
 
   const prompt = `
-    You are a Revenue Management System AI expert for the Indian hospitality market.
+    You are a Revenue Management System AI expert for the Indian hospitality market named RevOp AI.
     Analyze the following hotel data for a hotel in ${city}, India.
     Currency is INR (Indian Rupee).
     Consider the occupancy trends and competitor rates.
@@ -100,6 +100,7 @@ export const findLocalEvents = async (city: string, month: string): Promise<Even
       uri: string;
     }
 
+    // Fix: Explicitly map the incoming chunk to the expected structure
     const sources: SourceItem[] = chunks
         .map((chunk: any) => ({
             title: chunk.web?.title || "Source",
@@ -130,14 +131,14 @@ export const findLocalEvents = async (city: string, month: string): Promise<Even
 /**
  * Chat assistant function
  */
-export const chatWithJyotiPrem = async (history: {role: string, parts: {text: string}[]}[], message: string) => {
+export const chatWithRevOp = async (history: {role: string, parts: {text: string}[]}[], message: string) => {
     if (!apiKey) throw new Error("API Key missing");
     
     const chat = ai.chats.create({
         model: 'gemini-2.5-flash',
         history: history,
         config: {
-            systemInstruction: "You are 'JyotiPrem', a helpful hotel revenue management assistant for Indian hoteliers. Prices are in INR. Keep answers brief, professional, and data-driven."
+            systemInstruction: "You are 'RevOp', a helpful hotel revenue management assistant for Indian hoteliers. Prices are in INR. Keep answers brief, professional, and data-driven."
         }
     });
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DailyData, PriceSuggestion } from '../types';
 import { analyzePricing } from '../services/gemini';
@@ -152,7 +151,7 @@ const PricingEngine: React.FC<PricingEngineProps> = ({ data, onUpdateRate }) => 
                           type="monotone" 
                           dataKey="price" 
                           stroke="#4f46e5" 
-                          strokeWidth={2}
+                          strokeWidth={2} 
                           fillOpacity={1} 
                           fill="url(#colorPrice)" 
                       />
@@ -237,7 +236,7 @@ const PricingEngine: React.FC<PricingEngineProps> = ({ data, onUpdateRate }) => 
                              <div className="text-xs leading-relaxed text-slate-700">
                                 <div className="flex items-center gap-1 mb-1">
                                     <Sparkles size={10} className="text-indigo-500" />
-                                    <span className="font-semibold text-indigo-700">JyotiPrem Analysis</span>
+                                    <span className="font-semibold text-indigo-700">RevOp AI Analysis</span>
                                 </div>
                                 {suggestion.reason}
                              </div>

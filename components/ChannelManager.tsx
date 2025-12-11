@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Channel } from '../types';
 import { Share2, Link, RefreshCw, Settings, Check, AlertTriangle, ToggleRight, Server, Shield, FileText, IndianRupee, Layers, List } from 'lucide-react';
@@ -255,7 +254,7 @@ const ChannelManager: React.FC<ChannelManagerProps> = ({ channels }) => {
                 <div className="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
                     <div>
                         <h3 className="font-bold text-slate-800 flex items-center gap-2"><Layers size={18}/> Room Type Mapping</h3>
-                        <p className="text-sm text-slate-500 mt-1">Map JyotiPrem room types to {selectedChannel.name} room IDs.</p>
+                        <p className="text-sm text-slate-500 mt-1">Map RevOp room types to {selectedChannel.name} room IDs.</p>
                     </div>
                     <select 
                         value={selectedChannelId} 
@@ -268,7 +267,7 @@ const ChannelManager: React.FC<ChannelManagerProps> = ({ channels }) => {
                 <table className="w-full text-left text-sm text-slate-600">
                     <thead className="bg-white border-b border-slate-200">
                         <tr>
-                            <th className="px-6 py-4 font-semibold text-slate-900 w-1/3">JyotiPrem Room</th>
+                            <th className="px-6 py-4 font-semibold text-slate-900 w-1/3">RevOp Room</th>
                             <th className="px-6 py-4 font-semibold text-slate-900 w-1/3">OTA Room ID / Name</th>
                             <th className="px-6 py-4 font-semibold text-slate-900 text-right">Status</th>
                         </tr>
@@ -307,7 +306,7 @@ const ChannelManager: React.FC<ChannelManagerProps> = ({ channels }) => {
                 <table className="w-full text-left text-sm text-slate-600">
                     <thead className="bg-white border-b border-slate-200">
                         <tr>
-                            <th className="px-6 py-4 font-semibold text-slate-900 w-1/3">JyotiPrem Rate Plan</th>
+                            <th className="px-6 py-4 font-semibold text-slate-900 w-1/3">RevOp Rate Plan</th>
                             <th className="px-6 py-4 font-semibold text-slate-900 w-1/3">OTA Rate Plan ID</th>
                             <th className="px-6 py-4 font-semibold text-slate-900 text-right">Mapping</th>
                         </tr>

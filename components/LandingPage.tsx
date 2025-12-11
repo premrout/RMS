@@ -17,7 +17,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ setPage }) => {
             <span className="text-indigo-600">at the best price.</span>
           </h1>
           <p className="mt-4 max-w-2xl mx-auto text-xl text-slate-500 mb-10">
-            JyotiPrem uses AI to analyze market demand and competitors in real-time, automatically adjusting your rates to maximize revenue for hotels in India.
+            RevOpRMS uses AI to analyze market demand and competitors in real-time, automatically adjusting your rates to maximize revenue for hotels in India.
           </p>
           <div className="flex justify-center gap-4">
             <button 
@@ -107,7 +107,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ setPage }) => {
       <section className="bg-indigo-900 text-white py-20">
           <div className="max-w-4xl mx-auto text-center px-4">
               <h2 className="text-3xl font-bold mb-6">Ready to increase your revenue by 20%?</h2>
-              <p className="text-indigo-200 mb-10 text-lg">Join 2,000+ hoteliers who trust JyotiPrem for their pricing strategy.</p>
+              <p className="text-indigo-200 mb-10 text-lg">Join 2,000+ hoteliers who trust RevOpRMS for their pricing strategy.</p>
               <button onClick={() => setPage('LOGIN')} className="bg-white text-indigo-900 px-8 py-4 rounded-full font-bold hover:bg-indigo-50 transition-colors">
                   Get Started for Free
               </button>

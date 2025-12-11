@@ -1,5 +1,5 @@
 {
-  "name": "JyotiPrem RMS",
-  "description": "A smart hotel revenue management system utilizing AI for dynamic pricing, demand forecasting, and market intelligence with real-time Google Search grounding.",
+  "name": "RevOpRMS",
+  "description": "RevOpRMS - The ultimate revenue operations platform for hotels. AI-driven dynamic pricing, demand forecasting, and distribution management.",
   "requestFramePermissions": []
 }

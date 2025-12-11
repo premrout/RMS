@@ -14,7 +14,8 @@ import {
   TrendingUp,
   FileText,
   BedDouble,
-  CreditCard
+  CreditCard,
+  Users
 } from 'lucide-react';
 import { DailyData, DashboardMetrics, ViewState, PageState, User, Competitor, Channel, ActionItem } from '../types';
 import Dashboard from './Dashboard';
@@ -30,6 +31,8 @@ import Reports from './Reports';
 import AdminPanel from './AdminPanel';
 import RMSModule from './RMSModule';
 import BookingEngine from './BookingEngine';
+import SuperAdminDashboard from './SuperAdminDashboard';
+import GuestCRM from './GuestCRM';
 import { api } from '../services/api';
 
 const COMPETITOR_COLORS = ['#ec4899', '#f59e0b', '#06b6d4', '#8b5cf6', '#84cc16'];
@@ -67,6 +70,52 @@ const App: React.FC = () => {
 
   // Competitor State
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
+
+  // --- DEEP LINKING: Load State from URL on Mount ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const pageParam = params.get('page');
+    const viewParam = params.get('view');
+    
+    // Simple mock auth check for deeplinking
+    if (pageParam === 'SUPER_ADMIN' || pageParam === 'APP') {
+        const mockUser: User = {
+            id: 'deeplink_user',
+            name: pageParam === 'SUPER_ADMIN' ? 'Super Admin' : 'Hotel Admin',
+            email: 'demo@revop.com',
+            role: pageParam === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN',
+            hotelName: pageParam === 'SUPER_ADMIN' ? 'RevOp HQ' : 'DeepLink Hotel',
+            status: 'Active'
+        };
+        setUser(mockUser);
+        setCurrentPage(pageParam as PageState);
+    } else if (pageParam) {
+        setCurrentPage(pageParam as PageState);
+    }
+
+    if (viewParam) {
+        setView(viewParam as ViewState);
+    }
+  }, []);
+
+  // --- DEEP LINKING: Update URL when State Changes ---
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    
+    if (currentPage) params.set('page', currentPage);
+    
+    // Only set 'view' if we are in the APP page (Super Admin handles its own 'sa_view')
+    if (currentPage === 'APP' && view) {
+        params.set('view', view);
+        params.delete('sa_view'); // Cleanup super admin params
+    } else if (currentPage !== 'APP') {
+        params.delete('view');
+    }
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, '', newUrl);
+  }, [currentPage, view]);
+
 
   // Function to generate and seed data if DB is empty
   const seedMockData = async (comps: Competitor[]) => {
@@ -139,10 +188,10 @@ const App: React.FC = () => {
         updateMetrics(daily);
     };
 
-    if (currentPage === 'APP') {
+    if (currentPage === 'APP' && user?.role !== 'SUPER_ADMIN') {
         fetchData();
     }
-  }, [currentPage]);
+  }, [currentPage, user]);
 
   const updateMetrics = (currentData: DailyData[]) => {
     const totalRev = currentData.reduce((sum, d) => sum + (d.revpar * 50), 0); 
@@ -159,12 +208,18 @@ const App: React.FC = () => {
 
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser);
-    setCurrentPage('APP');
+    if (loggedInUser.role === 'SUPER_ADMIN') {
+        setCurrentPage('SUPER_ADMIN');
+    } else {
+        setCurrentPage('APP');
+    }
   };
 
   const handleLogout = () => {
     setUser(null);
     setCurrentPage('LANDING');
+    // Clear URL params on logout
+    window.history.pushState(null, '', window.location.pathname);
   };
 
   // Competitor Handlers
@@ -223,6 +278,13 @@ const App: React.FC = () => {
   );
 
   // --------------------------------------------------------------------------
+  // Super Admin Render
+  // --------------------------------------------------------------------------
+  if (currentPage === 'SUPER_ADMIN' && user) {
+      return <SuperAdminDashboard user={user} onLogout={handleLogout} />;
+  }
+
+  // --------------------------------------------------------------------------
   // Public Website Render
   // --------------------------------------------------------------------------
   if (currentPage !== 'APP') {
@@ -241,8 +303,8 @@ const App: React.FC = () => {
         <footer className="bg-white border-t border-slate-100 py-12">
            <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-slate-500 text-sm">
               <div className="flex items-center mb-4 md:mb-0">
-                  <Hotel className="h-6 w-6 text-indigo-600 mr-2" />
-                  <span className="font-bold text-slate-800">JyotiPrem</span>
+                  <TrendingUp className="h-6 w-6 text-indigo-600 mr-2" />
+                  <span className="font-bold text-slate-800">RevOp<span className="text-indigo-600">RMS</span></span>
               </div>
               <div className="flex space-x-6">
                  <button className="hover:text-indigo-600">Privacy Policy</button>
@@ -250,7 +312,7 @@ const App: React.FC = () => {
                  <button className="hover:text-indigo-600">Contact</button>
               </div>
               <div className="mt-4 md:mt-0">
-                 © 2024 JyotiPrem Systems Pvt Ltd.
+                 © 2024 RevOp Systems Pvt Ltd.
               </div>
            </div>
         </footer>
@@ -259,7 +321,7 @@ const App: React.FC = () => {
   }
 
   // --------------------------------------------------------------------------
-  // Authenticated Dashboard Render
+  // Authenticated Hotel Dashboard Render
   // --------------------------------------------------------------------------
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
@@ -272,8 +334,8 @@ const App: React.FC = () => {
       >
         <div className="h-16 flex items-center px-6 border-b border-slate-100 cursor-pointer" onClick={() => setCurrentPage('LANDING')}>
           <div className="flex items-center space-x-2 text-indigo-600">
-            <Hotel size={28} strokeWidth={2.5} />
-            {sidebarOpen && <span className="text-xl font-bold tracking-tight text-slate-900">JyotiPrem</span>}
+            <TrendingUp size={28} strokeWidth={2.5} />
+            {sidebarOpen && <span className="text-xl font-bold tracking-tight text-slate-900">RevOp<span className="text-indigo-600">RMS</span></span>}
           </div>
         </div>
 
@@ -287,6 +349,7 @@ const App: React.FC = () => {
                     <NavItem viewState={ViewState.INVENTORY} icon={CalendarDays} label="Rates & Inventory" />
                     <NavItem viewState={ViewState.CHANNELS} icon={Share2} label="Channel Manager" />
                     <NavItem viewState={ViewState.RESERVATIONS} icon={BedDouble} label="Reservations" />
+                    <NavItem viewState={ViewState.GUESTS} icon={Users} label="Guest CRM" />
                     
                     <div className="mt-4 px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Revenue & Growth</div>
                     <NavItem viewState={ViewState.RMS} icon={TrendingUp} label="RMS & Competitors" />
@@ -304,6 +367,7 @@ const App: React.FC = () => {
                     <button onClick={() => setView(ViewState.INVENTORY)} className={`p-3 rounded-lg ${view === ViewState.INVENTORY ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`} title="Inventory"><CalendarDays size={20} /></button>
                     <button onClick={() => setView(ViewState.CHANNELS)} className={`p-3 rounded-lg ${view === ViewState.CHANNELS ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`} title="Channel Manager"><Share2 size={20} /></button>
                     <button onClick={() => setView(ViewState.RESERVATIONS)} className={`p-3 rounded-lg ${view === ViewState.RESERVATIONS ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`} title="Reservations"><BedDouble size={20} /></button>
+                    <button onClick={() => setView(ViewState.GUESTS)} className={`p-3 rounded-lg ${view === ViewState.GUESTS ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`} title="Guest CRM"><Users size={20} /></button>
                     <button onClick={() => setView(ViewState.RMS)} className={`p-3 rounded-lg ${view === ViewState.RMS ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`} title="RMS"><TrendingUp size={20} /></button>
                     <button onClick={() => setView(ViewState.BOOKING_ENGINE)} className={`p-3 rounded-lg ${view === ViewState.BOOKING_ENGINE ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`} title="Booking Engine"><Globe size={20} /></button>
                     <button onClick={() => setView(ViewState.REPORTS)} className={`p-3 rounded-lg ${view === ViewState.REPORTS ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`} title="Reports"><FileText size={20} /></button>
@@ -365,6 +429,8 @@ const App: React.FC = () => {
           {view === ViewState.CHANNELS && <ChannelManager channels={channels} />}
           
           {view === ViewState.RESERVATIONS && <Reservations />}
+
+          {view === ViewState.GUESTS && <GuestCRM />}
 
           {/* RMS Module combining Pricing and Competitors */}
           {view === ViewState.RMS && (

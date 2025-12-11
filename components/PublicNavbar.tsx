@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hotel, Menu, X } from 'lucide-react';
+import { TrendingUp, Menu, X } from 'lucide-react';
 import { PageState } from '../types';
 
 interface PublicNavbarProps {
@@ -27,8 +27,8 @@ const PublicNavbar: React.FC<PublicNavbarProps> = ({ setPage, currentPage }) => 
         <div className="flex justify-between h-20 items-center">
           {/* Logo */}
           <div className="flex items-center cursor-pointer" onClick={() => setPage('LANDING')}>
-            <Hotel className="h-8 w-8 text-indigo-600" />
-            <span className="ml-2 text-xl font-bold text-slate-900 tracking-tight">JyotiPrem</span>
+            <TrendingUp className="h-8 w-8 text-indigo-600" />
+            <span className="ml-2 text-xl font-bold text-slate-900 tracking-tight">RevOp<span className="text-indigo-600">RMS</span></span>
           </div>
 
           {/* Desktop Nav */}

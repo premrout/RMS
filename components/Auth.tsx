@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { User } from '../types';
-import { Mail, Facebook, Instagram, ShieldCheck, User as UserIcon, Hotel, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Facebook, Instagram, ShieldCheck, User as UserIcon, TrendingUp, AlertCircle, Loader2, Lock } from 'lucide-react';
 import { api } from '../services/api';
 
 interface AuthProps {
@@ -10,7 +10,7 @@ interface AuthProps {
 }
 
 const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
-  const [role, setRole] = useState<'ADMIN' | 'USER'>('ADMIN');
+  const [role, setRole] = useState<'ADMIN' | 'USER' | 'SUPER_ADMIN'>('ADMIN');
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,22 +22,23 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
     
     try {
         if(provider === 'email') {
-            const user = await api.login(email, password);
+            const user = await api.login(email, password, role);
             onLogin(user);
-        } else {
-            // Mock social login for now
-             setTimeout(() => {
-                onLogin({
-                  id: '123',
-                  name: role === 'ADMIN' ? 'Rajesh Kumar' : 'Staff Member',
-                  email: `user@${provider}.com`,
-                  role: role,
-                  hotelName: 'Hotel Mumbai Deluxe',
-                  avatar: 'https://ui-avatars.com/api/?name=Rajesh+Kumar&background=4f46e5&color=fff'
-                });
-            }, 1000);
+        } else if (provider === 'google') {
+             // Mock Google Login
+             await new Promise(resolve => setTimeout(resolve, 800));
+             onLogin({
+                 id: 'g_123',
+                 name: 'Google User',
+                 email: 'user@gmail.com',
+                 role: 'ADMIN',
+                 hotelName: 'My Hotel',
+                 avatar: 'https://ui-avatars.com/api/?name=Google+User&background=db4437&color=fff',
+                 status: 'Active'
+             });
         }
     } catch (err) {
+        console.error(err);
         setError('Invalid credentials or server error.');
         setLoading(false);
     }
@@ -48,9 +49,9 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-300">
         <div className="p-8 text-center bg-white border-b border-slate-100">
           <div className="mx-auto w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-4">
-             <Hotel size={24} />
+             <TrendingUp size={24} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900">Welcome to JyotiPrem</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Welcome to RevOp<span className="text-indigo-600">RMS</span></h2>
           <p className="text-slate-500 mt-2">Sign in to manage your property revenue</p>
         </div>
 
@@ -59,17 +60,24 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
            <div className="bg-slate-100 p-1 rounded-lg flex mb-6">
               <button 
                 onClick={() => setRole('ADMIN')}
-                className={`flex-1 flex items-center justify-center py-2 text-sm font-medium rounded-md transition-all ${role === 'ADMIN' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 flex items-center justify-center py-2 text-xs font-medium rounded-md transition-all ${role === 'ADMIN' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
-                <ShieldCheck size={16} className="mr-2" />
-                Admin
+                <ShieldCheck size={14} className="mr-1.5" />
+                Hotel Admin
               </button>
               <button 
                 onClick={() => setRole('USER')}
-                className={`flex-1 flex items-center justify-center py-2 text-sm font-medium rounded-md transition-all ${role === 'USER' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 flex items-center justify-center py-2 text-xs font-medium rounded-md transition-all ${role === 'USER' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
-                <UserIcon size={16} className="mr-2" />
+                <UserIcon size={14} className="mr-1.5" />
                 Staff
+              </button>
+               <button 
+                onClick={() => setRole('SUPER_ADMIN')}
+                className={`flex-1 flex items-center justify-center py-2 text-xs font-medium rounded-md transition-all ${role === 'SUPER_ADMIN' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <Lock size={14} className="mr-1.5" />
+                Super Admin
               </button>
            </div>
 
@@ -84,7 +92,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email address" 
+                placeholder={role === 'SUPER_ADMIN' ? "admin@revoprms.com" : "Email address"}
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" 
              />
              <input 
@@ -99,40 +107,27 @@ const Auth: React.FC<AuthProps> = ({ onLogin, onBack }) => {
              </button>
           </form>
           
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500">Or continue with</span>
-            </div>
-          </div>
+          {role !== 'SUPER_ADMIN' && (
+            <>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-slate-500">Or continue with</span>
+                </div>
+              </div>
 
-          <button 
-            onClick={() => handleLogin('google')}
-            disabled={loading}
-            className="w-full flex items-center justify-center px-4 py-3 border border-slate-300 rounded-xl shadow-sm text-slate-700 bg-white hover:bg-slate-50 font-medium transition-colors"
-          >
-            <Mail className="text-red-500 mr-3" size={20} />
-            Google
-          </button>
-          
-          <div className="grid grid-cols-2 gap-4">
-             <button 
-                onClick={() => handleLogin('facebook')}
+              <button 
+                onClick={() => handleLogin('google')}
                 disabled={loading}
-                className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-xl shadow-sm text-white bg-[#1877F2] hover:bg-[#166fe5] font-medium transition-colors"
-            >
-                <Facebook size={20} />
-            </button>
-            <button 
-                onClick={() => handleLogin('instagram')}
-                disabled={loading}
-                className="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-xl shadow-sm text-white bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] hover:opacity-90 font-medium transition-colors"
-            >
-                <Instagram size={20} />
-            </button>
-          </div>
+                className="w-full flex items-center justify-center px-4 py-3 border border-slate-300 rounded-xl shadow-sm text-slate-700 bg-white hover:bg-slate-50 font-medium transition-colors"
+              >
+                <Mail className="text-red-500 mr-3" size={20} />
+                Google
+              </button>
+            </>
+          )}
 
         </div>
         
